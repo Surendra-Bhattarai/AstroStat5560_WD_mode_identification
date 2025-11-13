@@ -10,11 +10,11 @@
 
 ! load a saved model
       load_saved_model = .false.
-      saved_model_name = 'undefined'  
+      load_model_filename = 'undefined'  
 
 ! use density and temperature
-      change_lnPgas_flag = .false.
-      new_lnPgas_flag = .false.
+      !change_lnPgas_flag = .false.
+      !new_lnPgas_flag = .false.
 
 ! 49 isotope network
       change_net              = .true.   
@@ -22,10 +22,6 @@
       show_net_reactions_info = .false.
       list_net_reactions      = .false.
       show_net_species_info   = .false.
-
-! opacity
-      kappa_file_prefix = 'a09'    ! 'gs98' 'a09'  'OP_a09' 'OP_gs98'
-      kappa_CO_prefix   = 'a09_co' ! 'gs98_co' 'a09_co'
 
 
 ! turn on hydro
@@ -70,8 +66,8 @@
 
 
 ! reaction rates generally
-       set_rates_preference = .true.
-       new_rates_preference = 2   ! 1 = nacre ; 2 = jina reaclib
+!       set_rates_preference = .true.
+ !      new_rates_preference = 2   ! 1 = nacre ; 2 = jina reaclib
 
 
 ! multiply rates by factor at run time
@@ -85,11 +81,20 @@
 
 ! pgstar
       pgstar_flag = .true.
-      disable_pgstar_for_relax = .true.
+      disable_pgstar_during_relax_flag = .true.
       save_pgstar_files_when_terminate = .true.
 
 / ! end of star_job namelist
 
+
+&kap
+! opacity
+      kap_file_prefix = 'a09'    ! 'gs98' 'a09'  'OP_a09' 'OP_gs98'
+      kap_CO_prefix   = 'a09_co' ! 'gs98_co' 'a09_co
+      use_Type2_opacities = .true.
+      Zbase = 0.02
+
+/ !end of kap namelist
 
 
 &controls
@@ -121,10 +126,6 @@
 !       extra_terminal_output_file = 'log.txt'
 
 
-! opacities
-      use_Type2_opacities = .true.
-      Zbase = 0.02
-
 !      op_mono_data_path = ''
 !      op_mono_data_cache_filename = ''
 !      op_mono_min_X_to_include = 1d-10 ! skip iso if mass fraction < this
@@ -150,10 +151,10 @@
       min_timestep_factor         = 0.8d0
       max_timestep_factor         = 1.05d0
       timestep_factor_for_retries = 0.75
-      timestep_factor_for_backups = 0.75
+    !  timestep_factor_for_backups = 0.75
 
-      newton_iterations_limit      = 50
-      newton_iterations_hard_limit = -1
+      solver_iters_timestep_limit      = 50
+    !  newton_iterations_hard_limit = -1
 
       max_resid_jump_limit = 1.0d99 ! 1d99 ! 1d12
       max_corr_jump_limit  = 1.0d99 ! 1d99 ! 1d12
@@ -272,45 +273,85 @@
 
 
 ! overshoot
+
+!=========================================================
+! New overshoot controls (MESA r24.08.1+)
+!=========================================================
+
+! Nonburning convective regions
+overshoot_scheme(1)   = 'exponential'
+overshoot_zone_type(1)= 'nonburn'
+overshoot_zone_loc(1) = 'any'
+overshoot_bdy_loc(1)  = 'any'
+overshoot_f(1)        = 0.011
+overshoot_f0(1)       = 0.006
+
+! Hydrogen-burning convective regions
+overshoot_scheme(2)   = 'exponential'
+overshoot_zone_type(2)= 'burn_H'
+overshoot_zone_loc(2) = 'any'
+overshoot_bdy_loc(2)  = 'any'
+overshoot_f(2)        = 0.011
+overshoot_f0(2)       = 0.006
+
+! Helium-burning convective regions
+overshoot_scheme(3)   = 'exponential'
+overshoot_zone_type(3)= 'burn_He'
+overshoot_zone_loc(3) = 'any'
+overshoot_bdy_loc(3)  = 'any'
+overshoot_f(3)        = 0.011
+overshoot_f0(3)       = 0.006
+
+! Metal-burning convective regions
+overshoot_scheme(4)   = 'exponential'
+overshoot_zone_type(4)= 'burn_Z'
+overshoot_zone_loc(4) = 'any'
+overshoot_bdy_loc(4)  = 'any'
+overshoot_f(4)        = 0.011
+overshoot_f0(4)       = 0.006
+
+! Optional: replacement for old D_mix_ov_limit
+overshoot_D_min       = 1d2
+
             ! For nonburning regions.
 
-         overshoot_f_above_nonburn_core   = 0.011  ! 0.022  
-         overshoot_f0_above_nonburn_core  = 0.006
-         overshoot_f_above_nonburn_shell  = 0.011  ! 0.022  
-         overshoot_f0_above_nonburn_shell = 0.006
-         overshoot_f_below_nonburn_shell  = 0.011  ! 0.022  
-         overshoot_f0_below_nonburn_shell = 0.006
-         overshoot_below_noburn_shell_factor = 1.0d0
+   !      overshoot_f_above_nonburn_core   = 0.011  ! 0.022  
+   !      overshoot_f0_above_nonburn_core  = 0.006
+   !      overshoot_f_above_nonburn_shell  = 0.011  ! 0.022  
+   !      overshoot_f0_above_nonburn_shell = 0.006
+   !      overshoot_f_below_nonburn_shell  = 0.011  ! 0.022  
+   !     overshoot_f0_below_nonburn_shell = 0.006
+   !      overshoot_below_noburn_shell_factor = 1.0d0
 
             ! For hydrogen burning regions.
 
-         overshoot_f_above_burn_h_core   = 0.011  ! 0.022  
-         overshoot_f0_above_burn_h_core  = 0.006
-         overshoot_f_above_burn_h_shell  = 0.011  ! 0.022  
-         overshoot_f0_above_burn_h_shell = 0.006
-         overshoot_f_below_burn_h_shell  = 0.011  ! 0.022  
-         overshoot_f0_below_burn_h_shell = 0.006
+   !      overshoot_f_above_burn_h_core   = 0.011  ! 0.022  
+   !      overshoot_f0_above_burn_h_core  = 0.006
+   !      overshoot_f_above_burn_h_shell  = 0.011  ! 0.022  
+   !      overshoot_f0_above_burn_h_shell = 0.006
+   !      overshoot_f_below_burn_h_shell  = 0.011  ! 0.022  
+   !      overshoot_f0_below_burn_h_shell = 0.006
 
             ! For helium burning regions.
 
-         overshoot_f_above_burn_he_core   = 0.011  ! 0.022 
-         overshoot_f0_above_burn_he_core  = 0.006
-         overshoot_f_above_burn_he_shell  = 0.011  ! 0.022  
-         overshoot_f0_above_burn_he_shell = 0.006
-         overshoot_f_below_burn_he_shell  = 0.011  ! 0.022  
-         overshoot_f0_below_burn_he_shell = 0.006
+   !      overshoot_f_above_burn_he_core   = 0.011  ! 0.022 
+   !      overshoot_f0_above_burn_he_core  = 0.006
+   !      overshoot_f_above_burn_he_shell  = 0.011  ! 0.022  
+   !      overshoot_f0_above_burn_he_shell = 0.006
+   !      overshoot_f_below_burn_he_shell  = 0.011  ! 0.022  
+   !      overshoot_f0_below_burn_he_shell = 0.006
 
 
             ! For metals burning regions.
 
-         overshoot_f_above_burn_z_core   = 0.011  ! 0.022  
-         overshoot_f0_above_burn_z_core  = 0.006
-         overshoot_f_above_burn_z_shell  = 0.011  ! 0.022  
-         overshoot_f0_above_burn_z_shell = 0.006
-         overshoot_f_below_burn_z_shell  = 0.011  ! 0.022  
-         overshoot_f0_below_burn_z_shell = 0.006
+   !      overshoot_f_above_burn_z_core   = 0.011  ! 0.022  
+   !      overshoot_f0_above_burn_z_core  = 0.006
+   !      overshoot_f_above_burn_z_shell  = 0.011  ! 0.022  
+   !      overshoot_f0_above_burn_z_shell = 0.006
+   !      overshoot_f_below_burn_z_shell  = 0.011  ! 0.022  
+   !      overshoot_f0_below_burn_z_shell = 0.006
 
-         D_mix_ov_limit = 1d2
+   !      D_mix_ov_limit = 1d2
 
 ! semiconvection
       alpha_semiconvection = 1.0d-2  !   1d-2   1.0d-4 1.0
@@ -374,11 +415,19 @@
 
 
 ! gyre output for post-process oscillation
-      write_pulse_data_with_profile = .false.
-      pulse_data_format = 'GYRE'
-      add_double_points_to_pulse_data = .true.
+   write_pulse_data_with_profile = .true.
+   pulse_data_format = 'GYRE'
+   add_atmosphere_to_pulse_data = .true.
+   keep_surface_point_for_pulse_data = .true.
+   add_center_point_to_pulse_data    = .true.
+   add_double_points_to_pulse_data = .true.
 
-
+! OUTPUT PARAMS - ADJUST AS NEEDED
+   photo_interval = 1000
+   profile_interval = 5
+   history_interval = 1
+   terminal_interval = 10
+   write_header_frequency = 10
 
 / ! end of controls namelist
 

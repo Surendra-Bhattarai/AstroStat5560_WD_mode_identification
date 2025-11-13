@@ -380,7 +380,7 @@ show_TRho_Profile_degeneracy_line = .true.
 show_TRho_Profile_Pgas_Prad_line = .true.
 show_TRho_Profile_burn_lines = .true.
 show_TRho_Profile_burn_labels = .true.
-show_TRho_Profile_logQ_limit = .false.
+!show_TRho_Profile_logQ_limit = .false.
       
 ! axis limits
 TRho_Profile_xmin = -5.0
